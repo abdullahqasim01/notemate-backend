@@ -38,7 +38,7 @@ async function bootstrap() {
   const port = configService.port;
 
   // Start the server
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
 
   logger.log(`🚀 Notemate Backend is running on: http://localhost:${port}`);
   logger.log(`📝 Webhook endpoint: http://localhost:${port}/webhook/assemblyai`);
