@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { FirestoreService } from '../firestore/firestore.service';
-import { AssemblyAIService} from '../assemblyai/assemblyai.service';
+import { AssemblyAIService } from '../assemblyai/assemblyai.service';
 import { GeminiService } from '../gemini/gemini.service';
 import { FilebaseService } from '../filebase/filebase.service';
 import { ConfigService } from '../config/config.service';
@@ -13,7 +13,8 @@ import { ConfigService } from '../config/config.service';
 @Injectable()
 export class JobProcessorService {
   private readonly logger = new Logger(JobProcessorService.name);
-  private isProcessing = false;
+  private activeJobs = 0;
+  private readonly MAX_CONCURRENT_JOBS = 5;
 
   constructor(
     private readonly firestoreService: FirestoreService,
@@ -21,45 +22,65 @@ export class JobProcessorService {
     private readonly geminiService: GeminiService,
     private readonly filebaseService: FilebaseService,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
 
   /**
    * Cron job that runs every minute to process pending jobs
-   * Processes only one job at a time to respect API limits
+   * Processes up to 5 jobs concurrently
    */
   @Cron(CronExpression.EVERY_MINUTE)
   async processJobs() {
-    // Skip if already processing
-    if (this.isProcessing) {
-      this.logger.debug('Job processor already running, skipping...');
+    this.logger.log(`Checking for jobs. Active jobs: ${this.activeJobs}`);
+
+    if (this.activeJobs >= this.MAX_CONCURRENT_JOBS) {
+      this.logger.debug('Max concurrent jobs reached, skipping...');
       return;
     }
 
     try {
-      this.isProcessing = true;
-      this.logger.log('Checking for jobs to process...');
+      // Calculate available slots
+      let slots = this.MAX_CONCURRENT_JOBS - this.activeJobs;
 
-      // First check for jobs waiting for notes generation (after transcription)
-      let job = await this.getJobByStatus('generating_notes');
+      // 1. Prioritize generating notes (heavy task)
+      // We claim as many as possible up to slots
+      const notesJobs = await this.firestoreService.claimGeneratingNotesJobs(slots);
 
-      if (job) {
-        await this.processNotesGeneration(job);
-        return;
+      if (notesJobs.length > 0) {
+        this.logger.log(`Claimed ${notesJobs.length} jobs for notes generation`);
+        for (const job of notesJobs) {
+          this.activeJobs++;
+          // Process in background
+          this.processNotesGeneration(job).finally(() => {
+            this.activeJobs--;
+            this.logger.debug(`Job ${job.id} notes generation finished. Active jobs: ${this.activeJobs}`);
+          });
+        }
       }
 
-      // Then check for pending jobs (new audio to transcribe)
-      job = await this.firestoreService.getPendingJob();
+      slots -= notesJobs.length;
 
-      if (job) {
-        await this.processTranscription(job);
-        return;
+      if (slots <= 0) return;
+
+      // 2. Process pending jobs (transcription)
+      const pendingJobs = await this.firestoreService.claimPendingJobs(slots);
+
+      if (pendingJobs.length > 0) {
+        this.logger.log(`Claimed ${pendingJobs.length} jobs for transcription`);
+        for (const job of pendingJobs) {
+          this.activeJobs++;
+          // Process in background
+          this.processTranscription(job).finally(() => {
+            this.activeJobs--;
+            this.logger.debug(`Job ${job.id} transcription request finished. Active jobs: ${this.activeJobs}`);
+          });
+        }
       }
 
-      this.logger.debug('No jobs to process');
+      if (notesJobs.length === 0 && pendingJobs.length === 0) {
+        this.logger.debug('No jobs to process');
+      }
     } catch (error) {
       this.logger.error('Error in job processor:', error);
-    } finally {
-      this.isProcessing = false;
     }
   }
 

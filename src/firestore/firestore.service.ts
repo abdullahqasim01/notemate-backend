@@ -15,7 +15,7 @@ export class FirestoreService implements OnModuleInit {
   private readonly logger = new Logger(FirestoreService.name);
   private db: Firestore;
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(private readonly configService: ConfigService) { }
 
   /**
    * Initialize Firebase Admin SDK and Firestore on module initialization
@@ -347,6 +347,54 @@ export class FirestoreService implements OnModuleInit {
   }
 
   /**
+   * Atomically claim pending jobs for processing
+   * @param limit - Maximum number of jobs to claim
+   * @returns Array of claimed jobs
+   */
+  async claimPendingJobs(limit: number): Promise<Job[]> {
+    try {
+      return await this.db.runTransaction(async (transaction) => {
+        // Query for pending jobs
+        const query = this.db
+          .collection('jobs')
+          .where('status', '==', 'pending')
+          .limit(limit);
+
+        const snapshot = await transaction.get(query);
+
+        if (snapshot.empty) {
+          return [];
+        }
+
+        const jobs: Job[] = [];
+
+        // Update each job status to 'transcribing' (or initial processing state)
+        // We use 'transcribing' as the immediate next state based on current logic
+        snapshot.docs.forEach((doc) => {
+          const jobData = doc.data() as Job;
+
+          transaction.update(doc.ref, {
+            status: 'transcribing' as JobStatus,
+            updatedAt: Timestamp.now(),
+            attempts: (jobData.attempts || 0) + 1,
+          });
+
+          jobs.push({
+            ...jobData,
+            id: doc.id,
+            status: 'transcribing' as JobStatus, // Return with new status
+          });
+        });
+
+        return jobs;
+      });
+    } catch (error) {
+      this.logger.error(`Error claiming pending jobs (limit ${limit}):`, error);
+      throw error;
+    }
+  }
+
+  /**
    * Update job status
    * @param jobId - The job ID
    * @param status - The new status
@@ -375,6 +423,53 @@ export class FirestoreService implements OnModuleInit {
       this.logger.log(`Job ${jobId} status updated to ${status}`);
     } catch (error) {
       this.logger.error(`Error updating job status ${jobId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Atomically claim jobs ready for notes generation
+   * @param limit - Maximum number of jobs to claim
+   * @returns Array of claimed jobs
+   */
+  async claimGeneratingNotesJobs(limit: number): Promise<Job[]> {
+    try {
+      return await this.db.runTransaction(async (transaction) => {
+        // Query for jobs ready for notes generation
+        const query = this.db
+          .collection('jobs')
+          .where('status', '==', 'generating_notes')
+          .limit(limit);
+
+        const snapshot = await transaction.get(query);
+
+        if (snapshot.empty) {
+          return [];
+        }
+
+        const jobs: Job[] = [];
+
+        // Update each job status to 'processing' to lock it
+        snapshot.docs.forEach((doc) => {
+          const jobData = doc.data() as Job;
+
+          transaction.update(doc.ref, {
+            status: 'processing' as JobStatus,
+            updatedAt: Timestamp.now(),
+            attempts: (jobData.attempts || 0) + 1,
+          });
+
+          jobs.push({
+            ...jobData,
+            id: doc.id,
+            status: 'processing' as JobStatus,
+          });
+        });
+
+        return jobs;
+      });
+    } catch (error) {
+      this.logger.error(`Error claiming generating_notes jobs (limit ${limit}):`, error);
       throw error;
     }
   }

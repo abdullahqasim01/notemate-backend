@@ -10,6 +10,11 @@ import { ConfigModule } from '../config/config.module';
 /**
  * Module for job queue processing
  */
+import { JobsController } from './jobs.controller';
+
+/**
+ * Module for job queue processing
+ */
 @Module({
   imports: [
     ScheduleModule.forRoot(),
@@ -19,7 +24,8 @@ import { ConfigModule } from '../config/config.module';
     FilebaseModule,
     ConfigModule,
   ],
+  controllers: [JobsController],
   providers: [JobProcessorService],
   exports: [JobProcessorService],
 })
-export class JobsModule {}
+export class JobsModule { }
