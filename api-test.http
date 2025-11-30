@@ -1,0 +1,64 @@
+### Notemate Backend API Documentation
+### Base URL: http://localhost:3000
+
+### Variables
+@baseUrl = http://localhost:3000
+@authToken = YOUR_FIREBASE_ID_TOKEN_HERE
+@chatId = CHAT_ID_HERE
+
+### Health Check
+GET {{baseUrl}}
+
+###
+
+### 1. Create Chat
+POST {{baseUrl}}/chats
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "audioUrl": "https://utfs.io/f/your-audio-file.mp3"
+}
+
+###
+
+### 2. Get All Chats
+GET {{baseUrl}}/chats
+Authorization: Bearer {{authToken}}
+
+###
+
+### 3. Get Single Chat
+GET {{baseUrl}}/chats/{{chatId}}
+Authorization: Bearer {{authToken}}
+
+###
+
+### 4. Create Message (User Question)
+POST {{baseUrl}}/chats/{{chatId}}/messages
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "text": "What are the main points discussed in this recording?"
+}
+
+###
+
+### 5. Get All Messages
+GET {{baseUrl}}/chats/{{chatId}}/messages
+Authorization: Bearer {{authToken}}
+
+###
+
+### 6. AssemblyAI Webhook (No Auth Required)
+POST {{baseUrl}}/webhook/assemblyai
+Content-Type: application/json
+x-webhook-secret: YOUR_WEBHOOK_SECRET
+
+{
+  "transcript_id": "test-transcript-id",
+  "status": "completed"
+}
+
+###
