@@ -31,7 +31,6 @@ FIREBASE_PROJECT_ID=your-project-id
 FIREBASE_CLIENT_EMAIL=your-email@project.iam.gserviceaccount.com
 FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
 
-UPLOADTHING_TOKEN=your-uploadthing-token
 
 ASSEMBLYAI_API_KEY=your-assemblyai-key
 ASSEMBLYAI_WEBHOOK_SECRET=your-webhook-secret
@@ -92,7 +91,7 @@ src/
 ├── firestore/      → Database operations
 ├── gemini/         → AI services
 ├── messages/       → Message handling
-├── uploadthing/    → File storage
+├── filebase/       → File storage (S3/Filebase)
 ├── webhook/        → Webhook handlers
 └── common/         → Shared DTOs & interfaces
 ```
@@ -114,7 +113,7 @@ src/
 
 ## Workflow
 
-1. Upload audio → UploadThing
+1. Upload audio → Filebase
 2. POST /chats with audioUrl
 3. Backend → AssemblyAI (async)
 4. AssemblyAI → Webhook callback
@@ -203,7 +202,7 @@ npm run test:cov
 - firebase-admin - Auth & DB
 - assemblyai - Transcription
 - @google/generative-ai - AI
-- uploadthing - Storage
+- @aws-sdk/client-s3 - Storage (Filebase)
 - class-validator - Validation
 
 **Dev:**

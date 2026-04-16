@@ -31,13 +31,6 @@ export class ConfigService {
   }
 
   /**
-   * Get UploadThing token from environment variables
-   */
-  get uploadThingToken(): string {
-    return this.getEnvVar('UPLOADTHING_TOKEN');
-  }
-
-  /**
    * Get Filebase access key ID from environment variables
    */
   get filebaseAccessKeyId(): string {

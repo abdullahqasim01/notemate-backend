@@ -9,7 +9,7 @@
 - **Total DTOs:** 3
 - **Framework:** NestJS with TypeScript
 - **Database:** Firestore
-- **External APIs:** 4 (Firebase Auth, AssemblyAI, Gemini, UploadThing)
+- **External APIs:** 4 (Firebase Auth, AssemblyAI, Gemini, Filebase)
 
 ## 🏗️ Complete Architecture
 
@@ -94,9 +94,9 @@ notemate-backend/
 │   │   ├── messages.controller.ts      # Message endpoints
 │   │   └── messages.service.ts         # Message business logic
 │   │
-│   ├── uploadthing/
-│   │   ├── uploadthing.module.ts       # UploadThing module
-│   │   └── uploadthing.service.ts      # File upload/download
+│   ├── filebase/
+│   │   ├── filebase.module.ts          # Filebase module
+│   │   └── filebase.service.ts         # File upload/download
 │   │
 │   ├── webhook/
 │   │   ├── webhook.module.ts           # Webhook module
@@ -143,7 +143,7 @@ notemate-backend/
 ```
 Mobile App
     │
-    ├─► Upload Audio to UploadThing
+    ├─► Upload Audio to Filebase
     │
     └─► POST /chats { audioUrl }
             │
@@ -171,8 +171,8 @@ AssemblyAI
             │               ├─► Verify webhook secret
             │               ├─► Get transcript from AssemblyAI
             │               ├─► Generate notes with Gemini
-            │               ├─► Upload transcript.txt to UploadThing
-            │               ├─► Upload notes.txt to UploadThing
+            │               ├─► Upload transcript.txt to Filebase
+            │               ├─► Upload notes.txt to Filebase
             │               └─► Update Firestore: status = "done"
             │
             └─► Return { success: true }
@@ -224,9 +224,9 @@ Mobile App
 {
   userId: string                    // Firebase user ID
   status: "processing" | "done"     // Processing status
-  audioUrl: string                  // UploadThing audio URL
-  transcriptUrl?: string            // UploadThing transcript URL
-  notesUrl?: string                 // UploadThing notes URL
+  audioUrl: string                  // Filebase audio URL
+  transcriptUrl?: string            // Filebase transcript URL
+  notesUrl?: string                 // Filebase notes URL
   transcriptionId?: string          // AssemblyAI ID
   createdAt: Timestamp              // Creation timestamp
 }
@@ -270,7 +270,7 @@ Mobile App
 - Generate notes from transcripts
 - Generate chat responses with context
 
-### UploadThingService
+### FilebaseService
 - Upload text files (transcripts, notes)
 - Download text files
 - File URL management
@@ -296,7 +296,7 @@ Mobile App
 - `firebase-admin` - Firebase authentication & Firestore
 - `assemblyai` - Audio transcription
 - `@google/generative-ai` - Gemini AI
-- `uploadthing` - File storage
+- `@aws-sdk/client-s3` - File storage (Filebase)
 - `class-validator`, `class-transformer` - Validation
 
 ### Development

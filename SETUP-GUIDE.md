@@ -19,7 +19,7 @@ This will install all required packages including:
 - Firebase Admin SDK
 - AssemblyAI SDK
 - Google Generative AI (Gemini)
-- UploadThing
+- AWS SDK (Filebase S3)
 - NestJS dependencies
 
 ### Step 2: Configure Environment Variables
@@ -36,10 +36,6 @@ This will install all required packages including:
    - Go to Project Settings → Service Accounts
    - Click "Generate New Private Key"
    - Copy the values to your `.env` file
-
-   **UploadThing:**
-   - Sign up at [UploadThing](https://uploadthing.com/)
-   - Get your API token from the dashboard
 
    **AssemblyAI:**
    - Sign up at [AssemblyAI](https://www.assemblyai.com/)
@@ -120,7 +116,7 @@ The project includes an `api-test.http` file for testing endpoints with VS Code 
 
 ### Complete Flow Example:
 
-1. **User uploads audio** (via mobile app to UploadThing)
+1. **User uploads audio** (via mobile app to Filebase)
 2. **Create chat** with the audio URL
 3. **Backend processes:**
    - Creates Firestore document
@@ -131,7 +127,7 @@ The project includes an `api-test.http` file for testing endpoints with VS Code 
 6. **Backend completes:**
    - Gets transcript
    - Generates notes with Gemini
-   - Uploads both to UploadThing
+   - Uploads both to Filebase
    - Updates Firestore with URLs
 7. **User can now:**
    - View transcript and notes
@@ -154,10 +150,10 @@ The project includes an `api-test.http` file for testing endpoints with VS Code 
 - Update `WEBHOOK_BASE_URL` with correct ngrok URL
 - Check AssemblyAI webhook secret matches
 
-### Issue: "UploadThing upload fails"
+### Issue: "Filebase upload fails"
 **Solution:**
-- Verify `UPLOADTHING_TOKEN` is correct
-- Check UploadThing dashboard for errors
+- Verify `FILEBASE_ACCESS_KEY_ID`, `FILEBASE_SECRET_ACCESS_KEY`, and `FILEBASE_BUCKET_NAME` are correct
+- Check Filebase dashboard for errors
 
 ## 📁 Project Structure
 
@@ -171,7 +167,7 @@ notemate-backend/
 │   ├── firestore/          # Database operations
 │   ├── gemini/             # AI services
 │   ├── messages/           # Message handling
-│   ├── uploadthing/        # File storage
+│   ├── filebase/           # File storage (Filebase S3)
 │   ├── webhook/            # Webhook handlers
 │   ├── common/             # Shared code
 │   ├── app.module.ts       # Main module
@@ -185,7 +181,7 @@ notemate-backend/
 ## 🎯 Next Steps
 
 1. Set up Firebase Authentication in your mobile app
-2. Configure UploadThing for audio uploads
+2. Configure Filebase for audio uploads
 3. Test the complete workflow end-to-end
 4. Deploy to production (see deployment section in main README)
 

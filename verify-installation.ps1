@@ -27,7 +27,7 @@ if (Test-Path ".env") {
         "FIREBASE_PROJECT_ID",
         "FIREBASE_CLIENT_EMAIL",
         "FIREBASE_PRIVATE_KEY",
-        "UPLOADTHING_TOKEN",
+
         "ASSEMBLYAI_API_KEY",
         "ASSEMBLYAI_WEBHOOK_SECRET",
         "GEMINI_API_KEY"
@@ -57,7 +57,7 @@ if (Test-Path "node_modules") {
         "node_modules/firebase-admin",
         "node_modules/assemblyai",
         "node_modules/@google",
-        "node_modules/uploadthing",
+
         "node_modules/@nestjs"
     )
     
@@ -87,7 +87,7 @@ $requiredDirs = @(
     "src/firestore",
     "src/gemini",
     "src/messages",
-    "src/uploadthing",
+    "src/filebase",
     "src/webhook",
     "src/common"
 )

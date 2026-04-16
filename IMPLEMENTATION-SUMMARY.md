@@ -33,9 +33,9 @@ Your complete NestJS backend is ready with all the features specified in your re
 - ✅ `src/gemini/gemini.module.ts` - AI module
 - ✅ `src/gemini/gemini.service.ts` - Notes generation & chat AI
 
-### UploadThing Module (2 files)
-- ✅ `src/uploadthing/uploadthing.module.ts` - File storage module
-- ✅ `src/uploadthing/uploadthing.service.ts` - Upload/download service
+### Filebase Module (2 files)
+- ✅ `src/filebase/filebase.module.ts` - File storage module
+- ✅ `src/filebase/filebase.service.ts` - Upload/download service
 
 ### Chats Feature Module (3 files)
 - ✅ `src/chats/chats.module.ts` - Chats module
@@ -85,7 +85,7 @@ Your complete NestJS backend is ready with all the features specified in your re
 - [x] Message CRUD operations
 - [x] Query operations (by user, by transcription ID)
 
-### ✅ UploadThing Integration
+### ✅ Filebase Integration
 - [x] File upload service
 - [x] Text file upload (transcripts, notes)
 - [x] File download service
@@ -141,7 +141,7 @@ POST   /webhook/assemblyai           - AssemblyAI webhook callback
 
 ## 🔄 Complete Workflow
 
-1. **Mobile app uploads audio** to UploadThing
+1. **Mobile app uploads audio** to Filebase
 2. **POST /chats** with `audioUrl`
 3. **Backend creates Firestore document** with status "processing"
 4. **Backend submits to AssemblyAI** with webhook URL
@@ -170,7 +170,7 @@ cp .env.example .env
 
 # Edit .env with your credentials:
 # - Firebase credentials
-# - UploadThing token
+# - Filebase credentials
 # - AssemblyAI API key
 # - Gemini API key
 ```
@@ -252,7 +252,7 @@ AssemblyAI webhook handles async workflow
 ### All Requirements Met ✅
 - Firebase Auth (JWT verification only)
 - Firestore (chat + message storage)
-- UploadThing (file storage)
+- Filebase (file storage)
 - AssemblyAI (transcription via webhook)
 - Gemini (notes generation + chat)
 
@@ -284,4 +284,4 @@ Happy coding! 🚀
 
 ---
 
-**Built with ❤️ using NestJS, Firebase, AssemblyAI, Gemini AI, and UploadThing**
+**Built with ❤️ using NestJS, Firebase, AssemblyAI, Gemini AI, and Filebase**

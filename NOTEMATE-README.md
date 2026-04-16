@@ -8,7 +8,7 @@ A comprehensive NestJS backend for the Notemate application, featuring audio tra
 - **Audio Processing**: Automated transcription using AssemblyAI
 - **AI Notes Generation**: Smart note creation using Google Gemini AI
 - **Chat Interface**: Context-aware conversations about your transcripts
-- **File Storage**: Reliable file storage with UploadThing
+- **File Storage**: Reliable file storage with Filebase (S3-compatible)
 - **Real-time Updates**: Webhook-based processing pipeline
 
 ## 📋 Tech Stack
@@ -16,7 +16,7 @@ A comprehensive NestJS backend for the Notemate application, featuring audio tra
 - **Framework**: NestJS (TypeScript)
 - **Database**: Firestore (Firebase)
 - **Authentication**: Firebase Auth (JWT verification)
-- **File Storage**: UploadThing
+- **File Storage**: Filebase (S3-compatible)
 - **Transcription**: AssemblyAI
 - **AI**: Google Gemini API
 
@@ -29,7 +29,7 @@ A comprehensive NestJS backend for the Notemate application, featuring audio tra
 - **MessagesModule**: Message handling and AI responses
 - **WebhookModule**: AssemblyAI webhook processing
 - **FirestoreModule**: Database operations
-- **UploadThingModule**: File upload/download
+- **FilebaseModule**: File upload/download
 - **AssemblyAIModule**: Audio transcription
 - **GeminiModule**: AI notes generation and chat
 
@@ -57,7 +57,9 @@ A comprehensive NestJS backend for the Notemate application, featuring audio tra
    - `FIREBASE_PROJECT_ID`: Your Firebase project ID
    - `FIREBASE_CLIENT_EMAIL`: Firebase service account email
    - `FIREBASE_PRIVATE_KEY`: Firebase service account private key
-   - `UPLOADTHING_TOKEN`: UploadThing API token
+   - `FILEBASE_ACCESS_KEY_ID`: Filebase access key
+   - `FILEBASE_SECRET_ACCESS_KEY`: Filebase secret key
+   - `FILEBASE_BUCKET_NAME`: Filebase bucket name
    - `ASSEMBLYAI_API_KEY`: AssemblyAI API key
    - `ASSEMBLYAI_WEBHOOK_SECRET`: Secret for webhook verification
    - `GEMINI_API_KEY`: Google Gemini API key
@@ -110,14 +112,14 @@ All endpoints (except webhooks) require `Authorization: Bearer <firebase-token>`
 
 ## 🔄 Workflow
 
-1. **User uploads audio** → Mobile app uploads to UploadThing
+1. **User uploads audio** → Mobile app uploads to Filebase
 2. **Create chat** → POST `/chats` with audioUrl
 3. **Backend submits to AssemblyAI** → Transcription starts
 4. **Webhook notification** → AssemblyAI calls `/webhook/assemblyai`
 5. **Process results**:
    - Download transcript from AssemblyAI
    - Generate notes using Gemini
-   - Upload both to UploadThing
+   - Upload both to Filebase
    - Update Firestore with URLs
    - Set status to "done"
 6. **User can chat** → Ask questions about the transcript
@@ -133,7 +135,7 @@ src/
 ├── firestore/           # Firestore database operations
 ├── gemini/              # Gemini AI service
 ├── messages/            # Message handling
-├── uploadthing/         # File storage
+├── filebase/            # File storage (Filebase S3)
 ├── webhook/             # Webhook handlers
 ├── common/              # Shared DTOs and interfaces
 ├── app.module.ts        # Main application module
@@ -184,7 +186,7 @@ The application includes comprehensive error handling:
 - `401 Unauthorized` - Invalid or missing authentication
 - `404 Not Found` - Chat or resource not found
 - `400 Bad Request` - Invalid webhook signature or malformed data
-- `500 Internal Server Error` - Service failures (Gemini, AssemblyAI, UploadThing)
+- `500 Internal Server Error` - Service failures (Gemini, AssemblyAI, Filebase)
 
 ## 🤝 Contributing
 
