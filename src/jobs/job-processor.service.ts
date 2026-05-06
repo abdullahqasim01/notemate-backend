@@ -216,13 +216,21 @@ export class JobProcessorService {
     } catch (error) {
       this.logger.error(`Error processing notes generation for job ${job.id}:`, error);
 
-      await this.firestoreService.updateJobStatus(
-        job.id,
-        'failed',
-        error.message,
-      );
+      const isTransient =
+        error.message?.includes('503') ||
+        error.message?.includes('429') ||
+        error.message?.includes('Service Unavailable') ||
+        error.message?.includes('Too Many Requests');
 
-      await this.firestoreService.updateChatStatus(job.chatId, 'failed');
+      // Re-queue on transient errors (up to 10 total attempts) so the next cron tick retries
+      if (isTransient && (job.attempts ?? 0) < 10) {
+        this.logger.warn(`Transient error on job ${job.id}, re-queuing for retry (attempt ${job.attempts ?? 0})`);
+        await this.firestoreService.updateJobStatus(job.id, 'generating_notes');
+        await this.firestoreService.updateChatStatus(job.chatId, 'generating_notes');
+      } else {
+        await this.firestoreService.updateJobStatus(job.id, 'failed', error.message);
+        await this.firestoreService.updateChatStatus(job.chatId, 'failed');
+      }
     }
   }
 

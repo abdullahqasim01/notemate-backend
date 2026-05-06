@@ -15,7 +15,9 @@ export class GeminiService {
   constructor(private readonly configService: ConfigService) {
     // Initialize Gemini AI with the latest model
     this.genAI = new GoogleGenerativeAI(this.configService.geminiApiKey);
-    this.model = this.genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
+    this.model = this.genAI.getGenerativeModel({
+      model: 'gemini-flash-latest',
+    });
     this.logger.log('Gemini service initialized');
   }
 
@@ -25,10 +27,7 @@ export class GeminiService {
    * @returns Formatted notes as a string
    */
   async generateNotes(transcript: string): Promise<string> {
-    try {
-      this.logger.log('Generating notes from transcript');
-
-      const prompt = `You are an expert note-taker. Given the following transcript, create well-organized, clear, and comprehensive notes. 
+    const prompt = `You are an expert note-taker. Given the following transcript, create well-organized, clear, and comprehensive notes.
 
 Format the notes with:
 - Main topics and headings
@@ -43,17 +42,7 @@ ${transcript}
 
 Generate the notes:`;
 
-      const result = await this.model.generateContent(prompt);
-      const response = await result.response;
-      const notes = response.text();
-
-      this.logger.log('Notes generated successfully');
-      
-      return notes;
-    } catch (error) {
-      this.logger.error('Error generating notes:', error);
-      throw new Error(`Failed to generate notes: ${error.message}`);
-    }
+    return this.generateWithRetry(prompt, 'generateNotes');
   }
 
   /**
@@ -96,16 +85,38 @@ Provide a helpful, accurate response based on the transcript and notes. If the q
 
 Response:`;
 
-      const result = await this.model.generateContent(prompt);
-      const response = await result.response;
-      const answer = response.text();
-
-      this.logger.log('Chat response generated successfully');
-      
-      return answer;
+      return this.generateWithRetry(prompt, 'generateChatResponse');
     } catch (error) {
       this.logger.error('Error generating chat response:', error);
       throw new Error(`Failed to generate chat response: ${error.message}`);
     }
+  }
+
+  private async generateWithRetry(prompt: string, context: string, maxRetries = 5): Promise<string> {
+    let lastError: any;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        this.logger.log(`${context}: attempt ${attempt}`);
+        const result = await this.model.generateContent(prompt);
+        const response = await result.response;
+        return response.text();
+      } catch (error: any) {
+        lastError = error;
+        const is503 = error?.status === 503 || error?.message?.includes('503');
+        const is429 = error?.status === 429 || error?.message?.includes('429');
+
+        if ((is503 || is429) && attempt < maxRetries) {
+          const delayMs = Math.min(1000 * 2 ** attempt, 60_000); // 2s, 4s, 8s, 16s, 32s
+          this.logger.warn(`${context}: transient ${error.status ?? 'error'}, retrying in ${delayMs}ms (attempt ${attempt}/${maxRetries})`);
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
+        } else {
+          break;
+        }
+      }
+    }
+
+    this.logger.error(`${context} failed after ${maxRetries} attempts:`, lastError);
+    throw new Error(`Failed to generate content: ${lastError?.message}`);
   }
 }
