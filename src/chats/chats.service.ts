@@ -222,9 +222,9 @@ export class ChatsService {
       }
 
       const key = `${chatId}/notes.txt`;
-      const content = await this.filebaseService.downloadTextFile(
-        this.filebaseService.getPublicUrl(key),
-      );
+      // Use presigned URL so the download works regardless of bucket ACL settings
+      const presignedUrl = await this.filebaseService.generatePresignedDownloadUrl(key, 300);
+      const content = await this.filebaseService.downloadTextFile(presignedUrl);
       return content;
     } catch (error) {
       this.logger.error(`Error getting notes content for chat ${chatId}:`, error);
