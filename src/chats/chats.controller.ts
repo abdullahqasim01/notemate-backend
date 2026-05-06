@@ -155,6 +155,20 @@ export class ChatsController {
   }
 
   /**
+   * Get notes content directly as text
+   * GET /chats/:chatId/notes/content
+   */
+  @Get(':chatId/notes/content')
+  async getNotesContent(
+    @Param('chatId') chatId: string,
+    @GetUser() user: User,
+  ): Promise<{ content: string }> {
+    this.logger.log(`Getting notes content for chat ${chatId}`);
+    const content = await this.chatsService.getNotesContent(chatId, user.uid);
+    return { content };
+  }
+
+  /**
    * Delete a chat
    * DELETE /chats/:chatId
    * 

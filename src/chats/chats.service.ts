@@ -213,6 +213,25 @@ export class ChatsService {
    * @param userId - The authenticated user's ID (for authorization)
    * @returns Presigned download URL
    */
+  async getNotesContent(chatId: string, userId: string): Promise<string> {
+    try {
+      const chat = await this.getChat(chatId, userId);
+
+      if (!chat.notesUrl) {
+        throw new NotFoundException('Notes not available for this chat');
+      }
+
+      const key = `${chatId}/notes.txt`;
+      const content = await this.filebaseService.downloadTextFile(
+        this.filebaseService.getPublicUrl(key),
+      );
+      return content;
+    } catch (error) {
+      this.logger.error(`Error getting notes content for chat ${chatId}:`, error);
+      throw error;
+    }
+  }
+
   async getNotesDownloadUrl(chatId: string, userId: string): Promise<string> {
     try {
       const chat = await this.getChat(chatId, userId);
