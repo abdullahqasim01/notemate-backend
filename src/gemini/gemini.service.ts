@@ -13,10 +13,11 @@ export class GeminiService {
   private readonly model: any;
 
   constructor(private readonly configService: ConfigService) {
-    // Initialize Gemini AI with the latest model
+    // Initialize Gemini AI with a pinned model version (the -latest alias is
+    // the most contended and returns 503 UNAVAILABLE more often)
     this.genAI = new GoogleGenerativeAI(this.configService.geminiApiKey);
     this.model = this.genAI.getGenerativeModel({
-      model: 'gemini-flash-latest',
+      model: 'gemini-2.5-flash',
     });
     this.logger.log('Gemini service initialized');
   }
